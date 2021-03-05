@@ -17,11 +17,14 @@ class NNAgent(Agent):
     def __init__(self, num_inputs, num_outputs,
                  num_hidden_layers=0, neurons_per_hidden_layer=0,
                  file_dir_name=None, agent_type=None, game=None,
-                 stochastic_actions=False, driving_agent=True):
+                 stochastic_actions=False, driving_agent=True,
+                 in_tournament=False):
 
         self.agent_type = agent_type
         self.stochastic_actions = stochastic_actions
         self.driving_agent = driving_agent
+
+        self.in_tournament = in_tournament
 
         #For reading and writing models
         self.base_path = '/data/agents/evo_models/'
@@ -38,14 +41,17 @@ class NNAgent(Agent):
             self.neurons_per_hidden_layer = metadata['neurons_per_hidden_layer']
             self.stochastic_actions = metadata['stochastic_actions']
 
-            assert game is not None, "Need to hand NewGame object to NNAgent constructor " \
-                "in order to build the Observation class"
-
             obs_kwargs = {}
             obs_kwargs['driving_agent'] = self.agent_type
             obs_kwargs['normalise'] = metadata['normalise']
             obs_kwargs['domain_params_in_obs'] = metadata['domain_params_in_obs']
-            self.observation = Observation(game, **obs_kwargs)
+            self.obs_kwargs = obs_kwargs
+
+            if not self.in_tournament:
+                assert game is not None, "Need to hand NewGame object to NNAgent " \
+                    "constructor in order to build the Observation class"
+
+                self.observation = Observation(game, **obs_kwargs)
 
             #Build neural net
             self._build_nn()
@@ -128,10 +134,27 @@ class NNAgent(Agent):
         else:
             action = self._get_most_probable_action(net_out)
 
-        if not self.driving_agent:
+        if (not self.driving_agent) or self.in_tournament:
             action = self.action_lookup(action)
 
         return action
+
+    #Stitch together state from tournament
+    def getTournamentAction(self, obs, obs_normalised, domain_parameters,
+                            domain_parameters_normalised, state):
+
+        if self.obs_kwargs['normalise']:
+            stitched_obs = obs_normalised
+        else:
+            stitched_obs = obs
+
+        if self.obs_kwargs['domain_params_in_obs']:
+            if self.obs_kwargs['normalise']:
+                stitched_obs = np.concatenate((stitched_obs, domain_parameters_normalised))
+            else:
+                stitched_obs = np.concatenate((stitched_obs, domain_parameters))
+
+        return self.getAction(stitched_obs)
 
     #Returns the number of weights
     def get_num_weights(self):
@@ -234,6 +257,9 @@ class NNAgent(Agent):
 
     def _read_agent_from_file(self, dir_name):
         dir_path = self.base_path + dir_name + '/'
+
+        if self.in_tournament:
+            dir_path = "/plark_ai_public" + dir_path
 
         #Read metadata
         metadata = self._read_metadata(dir_path + 'metadata.json')
