@@ -9,6 +9,7 @@ from deap import creator, base, benchmarks, cma, tools, algorithms
 
 import numpy as np
 import copy
+import time
 
 def save_video(genome, agent, env, num_steps, file_name='evo_run.mp4'):
 
@@ -69,7 +70,7 @@ def evaluate(genome, config_file_path, driving_agent, normalise_obs, domain_para
 if __name__ == '__main__':
 
     #Env variables
-    config_file_path = '/Components/plark-game/plark_game/game_config/10x10/nn/nn_single_agent_balanced.json'
+    config_file_path = '/Components/plark-game/plark_game/game_config/10x10/nn/nn_single_agent_balanced_15.json'
     #trained_agent = 'panther'
     trained_agent = 'pelican'
     normalise_obs = True
@@ -148,9 +149,17 @@ if __name__ == '__main__':
                                                       stats=stats, halloffame=hof)
 
     #Save video of best agent
-    save_video(hof[0], dummy_agent, dummy_env, num_steps=200, file_name='hof_best_agent.mp4')
+    #save_video(hof[0], dummy_agent, dummy_env, num_steps=200, file_name='hof_best_agent.mp4')
 
-    #Save best agent
+    #Save best agents
     dummy_agent.set_weights(hof[0])
+    dummy_agent.save_agent(obs_normalise=normalise_obs, 
+                           domain_params_in_obs=domain_params_in_obs)
+    time.sleep(2)
+    dummy_agent.set_weights(hof[1])
+    dummy_agent.save_agent(obs_normalise=normalise_obs, 
+                           domain_params_in_obs=domain_params_in_obs)
+    time.sleep(2)
+    dummy_agent.set_weights(hof[2])
     dummy_agent.save_agent(obs_normalise=normalise_obs, 
                            domain_params_in_obs=domain_params_in_obs)
