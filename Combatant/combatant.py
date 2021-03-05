@@ -77,6 +77,17 @@ def load_combatant(
 
             agent_path, agent_name, basic_agents_path, game, in_tournament=False,**kwargs
         )
+    #Load an agent trained via an Evolutionary Algorithm - they use the NNAgent class
+    elif "evo_models" in agent_path:
+
+        from plark_game.agents.basic.panther_nn import PantherNN
+        from plark_game.agents.basic.pelican_nn import PelicanNN
+
+        if 'pelican' in agent_name:
+            return PelicanNN(file_dir_name='pelican', game=game, in_tournament=True)
+        else:
+            return PantherNN(file_dir_name='panther', game=game, in_tournament=True)
+
     else:
 
         files = os.listdir(agent_path)

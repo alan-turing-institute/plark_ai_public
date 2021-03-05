@@ -32,7 +32,7 @@ ALLOWED_ACTIONS = {
     ],
 }
 
-AGENT_NAME = ""
+#AGENT_NAME = ""
 
 BASIC_AGENTS_PATH = os.path.join(
     os.path.abspath(
@@ -53,6 +53,7 @@ BASIC_AGENTS_PATH = os.path.join(
 def main():
 
     agent_type = sys.argv[1].upper()
+    AGENT_NAME = "comb_%s" % (agent_type)
 
     if agent_type not in ["PELICAN", "PANTHER"]:
         raise Exception("Agent type must PELICAN or PANTHER: %s" % (agent_type))
