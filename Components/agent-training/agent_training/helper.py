@@ -588,11 +588,19 @@ def make_video_plark_env(agent, env, video_file_path, n_steps=10000, fps=DEFAULT
     writer = imageio.get_writer(video_file_path, fps=fps) 
     hsize = None
 
+    #Render first image
+    image = env.render(view='ALL')
+    if hsize is None:
+        wpercent = (basewidth/float(image.size[0]))
+        hsize = int((float(image.size[1])*float(wpercent)))
+    res_image = image.resize((basewidth,hsize), PIL.Image.ANTIALIAS)
+    writer.append_data(np.copy(np.array(res_image)))
+
     obs = env._observation()
     for step in range(n_steps):
-        image = env.render(view='ALL')
         action = agent.getAction(obs)
         obs, _, done, info = env.step(action)
+        image = env.render(view='ALL')
        
         if hsize is None:
             wpercent = (basewidth/float(image.size[0]))
