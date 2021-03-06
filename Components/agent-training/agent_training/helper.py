@@ -598,7 +598,10 @@ def make_video_plark_env(agent, env, video_file_path, n_steps=10000, fps=DEFAULT
 
     obs = env._observation()
     for step in range(n_steps):
-        action = agent.getAction(obs)
+        if agent is not None:
+            action = agent.getAction(obs)
+        else:
+            action = None
         obs, _, done, info = env.step(action)
         image = env.render(view='ALL')
        
