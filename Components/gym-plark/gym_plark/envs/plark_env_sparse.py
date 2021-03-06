@@ -23,7 +23,8 @@ class PlarkEnvSparse(PlarkEnv):
                 
   
         def step(self, action):
-                action = self.ACTION_LOOKUP[action]
+                if action is not None:
+                    action = self.ACTION_LOOKUP[action]
                 if self.verbose:
                         logger.info('Action:'+action)
                 gameState, uioutput = self.env.activeGames[len(
