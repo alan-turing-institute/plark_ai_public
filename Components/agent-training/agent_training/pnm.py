@@ -463,8 +463,8 @@ class PNM():
             # Check if we found a stable NE, in that case we are done (and fitting DF)
             if self.pnm_iteration > 0:
                 # Both BR payoffs (from against last time's NE) in terms of pelican payoff
-                br_value_pelican = np.dot(mixture_pelicans, self.payoffs[-1, :-1])
-                br_value_panther = np.dot(mixture_panthers, self.payoffs[:-1, -1])
+                br_value_pelican = np.dot(mixture_panthers, self.payoffs[-1, :-1])
+                br_value_panther = np.dot(mixture_pelicans, self.payoffs[:-1, -1])
 
                 ssize_pelican = get_support_size(mixture_pelicans)
                 ssize_panther = get_support_size(mixture_panthers)
