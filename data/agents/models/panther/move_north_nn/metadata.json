@@ -1,1 +1,0 @@
-{"algorithm": "PPO2", "date": "20210228_215734", "agentplayer": "panther", "render_height": 250, "render_width": 310, "image_based": false, "normalise": true, "domain_params_in_obs": false}
