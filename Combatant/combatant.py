@@ -33,8 +33,8 @@ AGENTS_PATH = os.path.join(
             os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir)
         ),
     ),
-    "data", 
-    "agents", 
+    "data",
+    "agents",
     "test"
 )
 ##########################################################
@@ -187,7 +187,7 @@ class Combatant:
             obs_normalised,
             domain_parameters,
             domain_parameters_normalised,
-            state
+            deserialized_state
         )
 
         # send the action back to the battle
