@@ -19,22 +19,19 @@ def save_video(genome, agent, env, num_steps, file_name='evo_run.mp4'):
     helper.make_video_plark_env(agent, env, video_path, n_steps=num_steps)
 
 def evaluate(genome, config_file_path, driving_agent, normalise_obs, domain_params_in_obs,
-             num_trials):
+             num_trials, num_inputs, num_hidden_layers, neurons_per_hidden_layer):
 
     #Instantiate the env
-    env = PlarkEnvSparse(config_file_path=config_file_path, image_based=False, 
+    env = PlarkEnvSparse(config_file_path=config_file_path, image_based=False,
                          driving_agent=driving_agent, normalise=normalise_obs,
                          domain_params_in_obs=domain_params_in_obs)
 
-    num_inputs = len(env._observation())
-    num_hidden_layers = 0
-    neurons_per_hidden_layer = 0
     if trained_agent == 'panther':
-        agent = PantherNN(num_inputs=num_inputs, num_hidden_layers=num_hidden_layers, 
-                          neurons_per_hidden_layer=neurons_per_hidden_layer)  
+        agent = PantherNN(num_inputs=num_inputs, num_hidden_layers=num_hidden_layers,
+                          neurons_per_hidden_layer=neurons_per_hidden_layer)
     else:
-        agent = PelicanNN(num_inputs=num_inputs, num_hidden_layers=num_hidden_layers, 
-                          neurons_per_hidden_layer=neurons_per_hidden_layer)  
+        agent = PelicanNN(num_inputs=num_inputs, num_hidden_layers=num_hidden_layers,
+                          neurons_per_hidden_layer=neurons_per_hidden_layer)
 
     agent.set_weights(genome)
 
@@ -46,7 +43,7 @@ def evaluate(genome, config_file_path, driving_agent, normalise_obs, domain_para
         obs = env._observation()
         trial_reward = 0
         while True:
-            action = agent.getAction(obs)    
+            action = agent.getAction(obs)
             obs, r, done, info = env.step(action)
             trial_reward += r
             if done:
@@ -75,7 +72,7 @@ if __name__ == '__main__':
     trained_agent = 'pelican'
     normalise_obs = True
     domain_params_in_obs = True
-    stochastic_actions = False
+    stochastic_actions = True
 
     random_panther_start_position = True
     random_pelican_start_position = True
@@ -97,13 +94,13 @@ if __name__ == '__main__':
     neurons_per_hidden_layer = 0
 
     if trained_agent == 'panther':
-        dummy_agent = PantherNN(num_inputs=num_inputs, num_hidden_layers=num_hidden_layers, 
+        dummy_agent = PantherNN(num_inputs=num_inputs, num_hidden_layers=num_hidden_layers,
                                 neurons_per_hidden_layer=neurons_per_hidden_layer,
-                                stochastic_actions=stochastic_actions)  
+                                stochastic_actions=stochastic_actions)
     else:
-        dummy_agent = PelicanNN(num_inputs=num_inputs, num_hidden_layers=num_hidden_layers, 
+        dummy_agent = PelicanNN(num_inputs=num_inputs, num_hidden_layers=num_hidden_layers,
                                 neurons_per_hidden_layer=neurons_per_hidden_layer,
-                                stochastic_actions=stochastic_actions)  
+                                stochastic_actions=stochastic_actions)
 
     num_weights = dummy_agent.get_num_weights()
 
@@ -111,9 +108,11 @@ if __name__ == '__main__':
     creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
-    toolbox.register("evaluate", evaluate, config_file_path=config_file_path, 
+    toolbox.register("evaluate", evaluate, config_file_path=config_file_path,
                      driving_agent=trained_agent, normalise_obs=normalise_obs,
-                     domain_params_in_obs=domain_params_in_obs, num_trials=num_trials)
+                     domain_params_in_obs=domain_params_in_obs, num_trials=num_trials,
+                     num_inputs=num_inputs, num_hidden_layers=num_hidden_layers,
+                     neurons_per_hidden_layer=neurons_per_hidden_layer)
 
     #np.random.seed(108)
 
@@ -145,7 +144,7 @@ if __name__ == '__main__':
     stats.register("max", np.max)
 
     num_gens = 1000
-    population, logbook = algorithms.eaGenerateUpdate(toolbox, ngen=num_gens, 
+    population, logbook = algorithms.eaGenerateUpdate(toolbox, ngen=num_gens,
                                                       stats=stats, halloffame=hof)
 
     #Save video of best agent
@@ -153,13 +152,13 @@ if __name__ == '__main__':
 
     #Save best agents
     dummy_agent.set_weights(hof[0])
-    dummy_agent.save_agent(obs_normalise=normalise_obs, 
+    dummy_agent.save_agent(obs_normalise=normalise_obs,
                            domain_params_in_obs=domain_params_in_obs)
     time.sleep(2)
     dummy_agent.set_weights(hof[1])
-    dummy_agent.save_agent(obs_normalise=normalise_obs, 
+    dummy_agent.save_agent(obs_normalise=normalise_obs,
                            domain_params_in_obs=domain_params_in_obs)
     time.sleep(2)
     dummy_agent.set_weights(hof[2])
-    dummy_agent.save_agent(obs_normalise=normalise_obs, 
+    dummy_agent.save_agent(obs_normalise=normalise_obs,
                            domain_params_in_obs=domain_params_in_obs)
