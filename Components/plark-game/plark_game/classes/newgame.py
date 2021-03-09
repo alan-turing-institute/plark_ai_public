@@ -65,7 +65,8 @@ class Newgame(NewgameBase):
                         self.render_width = self.panther_parameters['render_width']
 
                 self.reset_game()
-                self.render(self.render_width,self.render_height,self.gamePlayerTurn)
+                if self.ui_on:
+                	self.render(self.render_width,self.render_height,self.gamePlayerTurn)
 
 
         def set_pelican(self, pelican):

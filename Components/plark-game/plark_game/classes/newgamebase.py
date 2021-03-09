@@ -26,6 +26,7 @@ class NewgameBase():
         def __init__(self, game_config, **kwargs):
 
                 self.is_in_vec_env = kwargs.get('is_in_vec_env', False)
+                self.ui_on = kwargs.get('ui_on', False)
 
                 # load the game configurations
                 self.load_configurations(game_config, **kwargs)
@@ -44,7 +45,9 @@ class NewgameBase():
                 # Game state variables
                 self.default_game_variables()
 
-                self.pil_ui = PIL_UI(
+                if self.ui_on:
+
+                    self.pil_ui = PIL_UI(
                         self._state("ALL"),
                         self.hexScale,
                         self.output_view_all,
@@ -54,12 +57,13 @@ class NewgameBase():
                         self.sonobuoy_parameters['active_range'],
                         self.torpedo_parameters['hunt'],
                         self.torpedo_parameters['speed']
-                )
+                    )
                 self.phase = "PELICAN"
                 self.pelican_illegal_move_streak = 0
                 self.panther_illegal_move_streak = 0
 
-                self.render(self.render_width,self.render_height,self.gamePlayerTurn)
+                if self.ui_on:
+                    self.render(self.render_width,self.render_height,self.gamePlayerTurn)
 
 
         def game_step(self, action):
@@ -71,7 +75,10 @@ class NewgameBase():
                                 if self.pelican_move_in_turn <= self.pelican_parameters['move_limit'] and action != 'end':
                                         self.perform_pelican_action(action)
                                         if self.pelican_move_in_turn < self.pelican_parameters['move_limit']:
-                                                return self.gameState, self.gameBoard.UIOutput(self.gamePlayerTurn)
+                                        	if self.ui_on:
+                                                    return self.gameState, self.gameBoard.UIOutput(self.gamePlayerTurn)
+                                        	else:
+                                                    return self.gameState, None
                         else:
                                 self.pelicanPhase()
 
@@ -96,7 +103,10 @@ class NewgameBase():
                                 if self.panther_move_in_turn <= self.panther_parameters['move_limit'] and action != 'end':
                                         self.perform_panther_action(action)
                                         if self.panther_move_in_turn < self.panther_parameters['move_limit']:
-                                                return self.gameState, self.gameBoard.UIOutput(self.gamePlayerTurn)
+                                        	if self.ui_on:
+                                                    return self.gameState, self.gameBoard.UIOutput(self.gamePlayerTurn)
+                                        	else:
+                                                    return self.gameState, None
                         else:
                                 self.pantherPhase()
 
@@ -123,7 +133,10 @@ class NewgameBase():
                         self.turn_count = self.turn_count + 1
                         self.phase = "PELICAN"
 
-                return self.gameState, self.gameBoard.UIOutput(self.gamePlayerTurn)
+                if self.ui_on:
+                    return self.gameState, self.gameBoard.UIOutput(self.gamePlayerTurn)
+                else:
+                    return self.gameState, None
 
 
         def perform_panther_action(self, panther_action):
@@ -315,7 +328,7 @@ class NewgameBase():
                         raise ValueError("View", view, ' is not one of:', str(['PANTHER','PELICAN','ALL']) )
 
                 state = {
-                        'mapFile': self.gameBoard.UIOutput(view),
+                        #'mapFile': self.gameBoard.UIOutput(view),
                         'maxTurns': self.maxTurns,
                         'turn_count': self.turn_count,
                         'game_state': self.gameState,
@@ -334,6 +347,11 @@ class NewgameBase():
                         'map_width': self.map_width ,
                         'map_height': self.map_height,
                 }
+
+                if self.ui_on:
+                	state.update({'mapFile': self.gameBoard.UIOutput(view)})
+                else:
+                	state.update({'mapFile': None})
 
                 if view in ['PELICAN', 'ALL'] or self.driving_agent == 'pelican' or self.output_view_all:
                         state['pelican_max_moves'] = self.pelican_parameters['move_limit']

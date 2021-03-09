@@ -11,6 +11,7 @@ from plark_game import classes
 from gym_plark.envs import plark_env
 from gym_plark.envs.plark_env_sparse import PlarkEnvSparse
 from gym_plark.envs.plark_env import PlarkEnv
+from gym_plark.envs.plark_env_cl import PlarkEnvCurriculum
 from stable_baselines.common.vec_env import SubprocVecEnv
 from stable_baselines.common.env_checker import check_env
 from stable_baselines import DQN, PPO2, A2C, ACKTR
@@ -230,6 +231,7 @@ def get_env(driving_agent,
             random_pelican_start_position=True,
             max_illegal_moves_per_turn = 3,
             sparse=False,
+            curriculum_learning=False,
             normalise=False,
             is_in_vec_env=False):
 
@@ -246,7 +248,10 @@ def get_env(driving_agent,
         params.update(panther_agent_filepath = opponent)
     elif opponent != None and driving_agent == 'panther':
         params.update(pelican_agent_filepath = opponent)
-    if sparse:
+
+    if curriculum_learning:
+        return PlarkEnvCurriculum(**params)
+    elif sparse:
         return PlarkEnvSparse(**params)
     else:
         return PlarkEnv(**params)
@@ -260,6 +265,7 @@ def get_envs(driving_agent,
              random_pelican_start_position=True,
              max_illegal_moves_per_turn=3,
              sparse=False,
+             curriculum_learning=False,
              vecenv=True,
              mixture=None,
              normalise=False):
@@ -270,6 +276,7 @@ def get_envs(driving_agent,
                   random_panther_start_position = random_panther_start_position,
                   random_pelican_start_position = random_pelican_start_position,
                   max_illegal_moves_per_turn = max_illegal_moves_per_turn,
+                  curriculum_learning=curriculum_learning,
                   sparse = sparse,
                   normalise = normalise,
                   is_in_vec_env=vecenv)
