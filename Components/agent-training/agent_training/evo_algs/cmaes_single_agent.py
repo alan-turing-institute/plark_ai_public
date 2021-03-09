@@ -42,11 +42,16 @@ def evaluate(genome, config_file_path, driving_agent, normalise_obs, domain_para
 
         obs = env._observation()
         trial_reward = 0
+        step_num = 0
         while True:
+            #print("Step num:", step_num)
             action = agent.getAction(obs)
             obs, r, done, info = env.step(action)
             trial_reward += r
+            step_num += 1
             if done:
+                step_num = 0
+                #print(info['status'])
                 break
         reward += trial_reward
 
@@ -59,15 +64,14 @@ def evaluate(genome, config_file_path, driving_agent, normalise_obs, domain_para
     #print("Reward:", reward)
     #print("Status:", info['status'])
 
-    #save_video(genome, agent, env, max_num_steps, file_name='evo.mp4')
-    #exit()
-
     return [reward]
 
 if __name__ == '__main__':
 
     #Env variables
-    config_file_path = '/Components/plark-game/plark_game/game_config/10x10/nn/nn_single_agent_balanced_15.json'
+    #config_file_path = '/Components/plark-game/plark_game/game_config/10x10/nn/nn_single_agent_balanced.json'
+    config_file_path = '/Components/plark-game/plark_game/game_config/20x20/balanced.json'
+    #config_file_path = '/Components/plark-game/plark_game/game_config/00_26x33_02_07_30_12.json'
     #trained_agent = 'panther'
     trained_agent = 'pelican'
     normalise_obs = True
@@ -135,7 +139,7 @@ if __name__ == '__main__':
         pool = multiprocessing.Pool()
         toolbox.register("map", pool.map)
 
-    num_genomes_in_hof = 3
+    num_genomes_in_hof = 1
     hof = evo_utils.HallOfFamePriorityYoungest(num_genomes_in_hof)
     stats = tools.Statistics(lambda ind: ind.fitness.values)
     stats.register("avg", np.mean)
@@ -144,21 +148,18 @@ if __name__ == '__main__':
     stats.register("max", np.max)
 
     num_gens = 1000
-    population, logbook = algorithms.eaGenerateUpdate(toolbox, ngen=num_gens,
-                                                      stats=stats, halloffame=hof)
+    dump_every = 25
+    population, logbook = evo_utils.eaGenerateUpdate(toolbox, ngen=num_gens,
+                                                     stats=stats, halloffame=hof,
+                                                     dump_every=dump_every,
+                                                     obs_normalise=normalise_obs,
+                                                     domain_params_in_obs=domain_params_in_obs,
+                                                     dummy_agent=dummy_agent)
 
     #Save video of best agent
     #save_video(hof[0], dummy_agent, dummy_env, num_steps=200, file_name='hof_best_agent.mp4')
 
-    #Save best agents
+    #Save best agent
     dummy_agent.set_weights(hof[0])
-    dummy_agent.save_agent(obs_normalise=normalise_obs,
-                           domain_params_in_obs=domain_params_in_obs)
-    time.sleep(2)
-    dummy_agent.set_weights(hof[1])
-    dummy_agent.save_agent(obs_normalise=normalise_obs,
-                           domain_params_in_obs=domain_params_in_obs)
-    time.sleep(2)
-    dummy_agent.set_weights(hof[2])
     dummy_agent.save_agent(obs_normalise=normalise_obs,
                            domain_params_in_obs=domain_params_in_obs)

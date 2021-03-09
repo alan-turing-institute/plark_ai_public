@@ -226,11 +226,12 @@ class NNAgent(Agent):
             csv_writer = csv.writer(outfile)
             csv_writer.writerow(self.get_weights())
 
-    def _save_agent_to_file(self, player_type, obs_normalise, domain_params_in_obs):
+    def _save_agent_to_file(self, player_type, obs_normalise, domain_params_in_obs,
+                            file_name_suffix=''):
 
         #Construct full directory path
         date_time = str(datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-        dir_name = player_type + '_' + date_time
+        dir_name = player_type + '_' + date_time + file_name_suffix
         dir_path = self.base_path + dir_name
 
         #Create directory for model

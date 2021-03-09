@@ -7,10 +7,11 @@ if __name__ == '__main__':
 
     #Env variables
     config_file_path = '/Components/plark-game/plark_game/game_config/10x10/nn/nn_coevolution_balanced.json'
+    #config_file_path = '/Components/plark-game/plark_game/game_config/10x10/nn/nn_single_agent_balanced_15.json'
     driving_agent = 'pelican'
     normalise_obs = True
     domain_params_in_obs = True
-    stochastic_actions = False
+    stochastic_actions = True
 
     random_panther_start_position = True
     random_pelican_start_position = True
@@ -23,19 +24,19 @@ if __name__ == '__main__':
                                domain_params_in_obs=domain_params_in_obs,
                                random_panther_start_position=random_panther_start_position,
                                random_pelican_start_position=random_pelican_start_position)
-    game = dummy_env.env.activeGames[len(dummy_env.env.activeGames)-1] 
+    game = dummy_env.env.activeGames[len(dummy_env.env.activeGames)-1]
 
     #Neural net variables
     num_inputs = len(dummy_env._observation())
     num_hidden_layers = 0
     neurons_per_hidden_layer = 0
 
-    #panther_dummy_agent = PantherNN(num_inputs=num_inputs, 
-    #                                num_hidden_layers=num_hidden_layers, 
-    #                                neurons_per_hidden_layer=neurons_per_hidden_layer)  
+    #panther_dummy_agent = PantherNN(num_inputs=num_inputs,
+    #                                num_hidden_layers=num_hidden_layers,
+    #                                neurons_per_hidden_layer=neurons_per_hidden_layer)
 
-    pelican_dummy_agent = PelicanNN(file_dir_name='pelican_20210305_013925', game=game,
-                                    driving_agent=True)  
+    pelican_dummy_agent = PelicanNN(file_dir_name='pelican_20210309_100850_gen_2', game=game,
+                                    driving_agent=True)
 
     #Set agent
     #game.pelicanAgent = pelican_dummy_agent
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     reward = 0
     obs = dummy_env._observation()
     for step_num in range(max_num_steps):
-        action = panther_dummy_agent.getAction(obs)    
+        action = panther_dummy_agent.getAction(obs)
         obs, r, done, info = dummy_env.step(action)
         reward += r
         if done:

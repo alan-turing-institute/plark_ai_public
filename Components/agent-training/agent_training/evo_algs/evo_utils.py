@@ -33,27 +33,41 @@ class HallOfFamePriorityYoungest(tools.HallOfFame):
                         self.remove(-1)
                     self.insert(ind)
 
-    '''
-    def insert(self, item):
-        """Insert a new individual in the hall of fame using the
-        :func:`~bisect.bisect_right` function. The inserted individual is
-        inserted on the right side of an equal individual. Inserting a new
-        individual in the hall of fame also preserve the hall of fame's order.
-        This method **does not** check for the size of the hall of fame, in a
-        way that inserting a new individual in a full hall of fame will not
-        remove the worst individual to maintain a constant size.
-        :param item: The individual with a fitness attribute to insert in the
-                     hall of fame.
-        """
-        item = deepcopy(item)
-        i = bisect_right(self.keys, item.fitness)
-        self.items.insert(len(self) - i, item)
-        self.keys.insert(i, item.fitness)
+"""
+This function is just a copy of the function in DEAP but it dumps the best genotype
+in the hall of fame every n generations
+"""
+def eaGenerateUpdate(toolbox, ngen, halloffame=None, stats=None,
+                     verbose=__debug__, dump_every=None, obs_normalise=None,
+                     domain_params_in_obs=None, dummy_agent=None):
+    logbook = tools.Logbook()
+    logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
 
-    def remove(self, index):
-        """Remove the specified *index* from the hall of fame.
-        :param index: An integer giving which item to remove.
-        """
-        del self.keys[len(self) - (index % len(self) + 1)]
-        del self.items[index]
-    '''
+    for gen in range(ngen):
+        # Generate a new population
+        population = toolbox.generate()
+        # Evaluate the individuals
+        fitnesses = toolbox.map(toolbox.evaluate, population)
+        for ind, fit in zip(population, fitnesses):
+            ind.fitness.values = fit
+
+        if halloffame is not None:
+            halloffame.update(population)
+
+        # Dump best agent
+        if dump_every is not None:
+            if gen % dump_every == 0:
+                dummy_agent.set_weights(halloffame[0])
+                dummy_agent.save_agent(obs_normalise=obs_normalise,
+                                       domain_params_in_obs=domain_params_in_obs,
+                                       file_name_suffix="_gen_" + str(gen))
+
+        # Update the strategy with the evaluated individuals
+        toolbox.update(population)
+
+        record = stats.compile(population) if stats is not None else {}
+        logbook.record(gen=gen, nevals=len(population), **record)
+        if verbose:
+            print(logbook.stream)
+
+    return population, logbook

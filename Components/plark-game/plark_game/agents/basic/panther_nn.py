@@ -13,16 +13,17 @@ class PantherNN(NNAgent):
         if file_dir_name is not None:
             self.check_file_name(file_dir_name)
 
-        super().__init__(num_inputs, len(ACTION_LOOKUP), 
-                         num_hidden_layers, neurons_per_hidden_layer, 
+        super().__init__(num_inputs, len(ACTION_LOOKUP),
+                         num_hidden_layers, neurons_per_hidden_layer,
                          file_dir_name, 'panther', game, stochastic_actions,
                          driving_agent, in_tournament)
 
     def action_lookup(self, action):
         return ACTION_LOOKUP[action]
 
-    def save_agent(self, obs_normalise, domain_params_in_obs):
-        self._save_agent_to_file('panther', obs_normalise, domain_params_in_obs)
+    def save_agent(self, obs_normalise, domain_params_in_obs, file_name_suffix=''):
+        self._save_agent_to_file('panther', obs_normalise, domain_params_in_obs,
+                                 file_name_suffix)
 
     def check_file_name(self, model_dir):
 
