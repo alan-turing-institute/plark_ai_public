@@ -79,10 +79,10 @@ def main():
 
     state = deserialize_state(json.load(open(os.path.join(test_path, "10x10_state.json"))))
 
-    obs = np.loadtxt(os.path.join(test_path, "10x10_obs.txt"))
-    obs_norm = np.loadtxt(os.path.join(test_path, "10x10_obs_norm.txt"))
-    d_params = np.loadtxt(os.path.join(test_path, "10x10_domain_params.txt"))
-    d_params_norm = np.loadtxt(os.path.join(test_path, "10x10_domain_params_norm.txt"))
+    obs = list(np.loadtxt(os.path.join(test_path, "10x10_obs.txt")))
+    obs_norm = list(np.loadtxt(os.path.join(test_path, "10x10_obs_norm.txt")))
+    d_params = list(np.loadtxt(os.path.join(test_path, "10x10_domain_params.txt")))
+    d_params_norm = list(np.loadtxt(os.path.join(test_path, "10x10_domain_params_norm.txt")))
 
     agent = load_combatant(agent_path, AGENT_NAME, BASIC_AGENTS_PATH)
 
