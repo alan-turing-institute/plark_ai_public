@@ -108,28 +108,28 @@ def get_path(start_location_col,  start_location_row, end_locataion_col, end_loc
             self.col = col
             self.row = row
             self.parent = parent
-            self.g = g # graphical score, the amount of moves from the starting location 
+            self.g = g # graphical score, the amount of moves from the starting location
             self.h = h # heuristic score, the distance from current node to end location
             self.f = g + h # final score, the sum of the above.
 
     def make_path(node, path=[]):
         # recursive function to add the locationof each nodes parent node untill the starting node is found.
-        # This starts at the end_location, and travels backwards along the shortest generated route. 
+        # This starts at the end_location, and travels backwards along the shortest generated route.
         if node.parent != None:
             path.insert(0, {"col": node.col, "row": node.row})
-            return (make_path(node.parent, path)) 
+            return (make_path(node.parent, path))
         else:
             return path
-            
+
     start_node = Node(start_location_col, start_location_row , 0, distance(start_location_col, start_location_row ,end_locataion_col, end_locataion_row))
 
-    # this list is used to store all locations that hve not been processed yet 
+    # this list is used to store all locations that hve not been processed yet
     open_list = [start_node]
 
     # this list containes all locations that have been processed
     closed_list = []
     goal_reached = False
-    
+
     while not goal_reached:
 
         # get the node(hex location) from the open list that has the lowest f score (the node with the best change of being a viable step)
@@ -153,13 +153,13 @@ def get_path(start_location_col,  start_location_row, end_locataion_col, end_loc
                 if (n['col'] != parent_node.col) or (n['row'] != parent_node.row): # test if the neighbour is the parent. the get radius function includes the starting location in its results but we dont want it here.
                     new_g = parent_node.g + 1
 
-                    # the n value is just a cordinate if they are already recorded in the open/closed lists we need the node object to modify 
+                    # the n value is just a cordinate if they are already recorded in the open/closed lists we need the node object to modify
                     # normally you wouldn't have to do this but due to the way we get neighbours this was the simplest option.
                     current_node_closed = next((x for x in closed_list if (x.col == n['col']) and (x.row == n['row'])), None)
                     current_node_open = next((x for x in open_list if (x.col == n['col']) and (x.row == n['row'])), None)
 
                     # test if the node is in the list if the amount of steps taken to get there is better than what is already recorded
-                    # update the node for the new parent 
+                    # update the node for the new parent
                     if current_node_closed in closed_list and new_g < current_node_closed.g:
                         current_node_closed.g = new_g
                         current_node_closed.parent = parent_node
@@ -171,7 +171,7 @@ def get_path(start_location_col,  start_location_row, end_locataion_col, end_loc
                     # If the node has not been added to any list create a node and add it to the open list
                     elif current_node_open not in open_list and current_node_closed not in closed_list:
                         open_list.append(Node(n['col'], n['row'], new_g, distance(n['col'], n['row'], end_locataion_col, end_locataion_row), parent_node))
-  
+
     # make the path.
     return(make_path(closed_list[-1]))
 
@@ -192,12 +192,12 @@ def searchRadius(grid, start_col, start_row, r, searchType):
     return returnList
 
 ###############################################################################
-# This version of searchRadius was created to allow operation without 
+# This version of searchRadius was created to allow operation without
 # grid that comes via state['mapFile'] and requires expensive UI rendering
 # each step
 ###############################################################################
 def searchRadius_nongrid(state, start_col, start_row, r, searchType):
-        
+
     # Note: searchType is a string in various calls not a list of search types
 
     if searchType not in ['TORPEDO']:
@@ -213,16 +213,16 @@ def searchRadius_nongrid(state, start_col, start_row, r, searchType):
 
     # Torpedo doesn't have a state
     # An sb does; the grid-based returns True for Torpedo state
-    # so we just put that in here, but certainly need to get 
+    # so we just put that in here, but certainly need to get
     # the state for an sb when extending this method
     dt_positions = [{'col':d.col, 'row':d.row, 'state':True} for d in deployed_torpedoes]
 
-    print(dt_positions)
+    #print(dt_positions)
 
     # Same as before, just returns coordinate pairs in a list of dicts
     searchList = getRadius(start_col, start_row, r, num_cols, num_rows)
-    
-    print('searchList: ' + str(searchList))
+
+    #print('searchList: ' + str(searchList))
 
     returnList = []
 

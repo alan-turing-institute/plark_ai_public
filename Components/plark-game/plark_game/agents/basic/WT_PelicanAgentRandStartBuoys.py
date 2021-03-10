@@ -21,9 +21,11 @@ class PelicanAgentRandStartBuoys(PelicanAgentFixedSBs):
         return super(PelicanAgentRandStartBuoys, self).getAction(state)
 
     def generate_sb_locations(self, state):
-        grid = jsonpickle.decode(state['mapFile'])
-        num_cols = len(grid)
-        num_rows = len(grid[0])
+        #grid = jsonpickle.decode(state['mapFile'])
+        #num_cols = len(grid)
+        #num_rows = len(grid[0])
+        num_rows = state['map_width']
+        num_cols = state['map_height']
         sb_locations = []
         no_of_sbs = len(list(filter(lambda item: (item.type == 'SONOBUOY'), state['pelican_loadout'])))
         sb_range = list(filter(lambda item: (item.type == 'SONOBUOY'), state['pelican_loadout']))[0].range
@@ -31,7 +33,8 @@ class PelicanAgentRandStartBuoys(PelicanAgentFixedSBs):
 
         # Start some distance down the grid
         seed()
-        sb_locations.append({'col': sb_range, 'row': [randint(1, num_rows - sb_range - 2)]})
+        #sb_locations.append({'col': sb_range, 'row': [randint(1, num_rows - sb_range - 2)]})
+        sb_locations.append({'col': sb_range, 'row': randint(1, num_rows - sb_range - 2)})
 
         for sb in range(no_of_sbs):
             new_sb = {

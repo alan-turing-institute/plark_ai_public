@@ -18,9 +18,11 @@ class PelicanAgentHalfGridBuoys(PelicanAgentFixedSBs):
         return super(PelicanAgentHalfGridBuoys, self).getAction(state)
 
     def generate_sb_locations(self, state):
-        grid = jsonpickle.decode(state['mapFile'])
-        num_cols = len(grid)
-        num_rows = len(grid[0])
+        #grid = jsonpickle.decode(state['mapFile'])
+        #num_cols = len(grid)
+        #num_rows = len(grid[0])
+        num_rows = state['map_width']
+        num_cols = state['map_height']
         sb_locations = []
         no_of_sbs = len(list(filter(lambda item: (item.type == 'SONOBUOY'), state['pelican_loadout'])))
         sb_range = list(filter(lambda item: (item.type == 'SONOBUOY'), state['pelican_loadout']))[0].range

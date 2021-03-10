@@ -54,8 +54,6 @@ class PelicanAgentFixedSBs(Pelican_Agent):
                 # If pelican is within sb range, drop torpedo if there isn't one nearby already
                 else:
 
-                    return_list = game_helper.searchRadius_nongrid(state, pelican_col, pelican_row, 1, "TORPEDO")
-
                     if (game_helper.searchRadius_nongrid(state,
                                                          pelican_col,
                                                          pelican_row,

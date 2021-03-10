@@ -53,10 +53,11 @@ class PantherAgentRandOpportunistic(Panther_Agent):
         map_width = state['map_width']
         panther_col = state['panther_col']
 
-        grid = jsonpickle.decode(state['mapFile'])  # get map in order to get sb_locations data
+        #grid = jsonpickle.decode(state['mapFile'])  # get map in order to get sb_locations data
         # Get cells containing sb
-        deployed_sb_cells = [cell for row in grid for cell in row if "SONOBUOY" in cell['objects']]
-        deployed_sb_cols = [cell["coordinate"][0] for cell in deployed_sb_cells]
+        #deployed_sb_cells = [cell for row in grid for cell in row if "SONOBUOY" in cell['objects']]
+        #deployed_sb_cols = [cell["coordinate"][0] for cell in deployed_sb_cells]
+        deployed_sb_cols = [buoy.col for buoy in state['deployed_sonobuoys'] if buoy.state == 'HOT']
         # sb_range = list(filter(lambda item: (item.type == 'SONOBUOY'), state['pelican_loadout']))[0].range
 
         # Removed 0 here as the panther will check if it can go straight ahead or not already
