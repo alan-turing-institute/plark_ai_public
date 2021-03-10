@@ -68,7 +68,7 @@ class Pelican_Agent_Load_Agent(Pelican_Agent):
 
     def getAction(self, state):
         # Eventually this should be replaced by a helper method that doesn't require constructing a class instance
-        if not self.pil_ui:
+        if self.imaged_based and not self.pil_ui:
             self.pil_ui = PIL_UI(
                 state,
                 state["hexScale"],
