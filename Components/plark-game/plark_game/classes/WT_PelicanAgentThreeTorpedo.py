@@ -21,7 +21,7 @@ class PelicanAgentThreeTorpedo(Pelican_Agent):
         self.sb_locations = []
 
     def getAction(self, state):
-        grid = jsonpickle.decode(state['mapFile'])
+        # grid = jsonpickle.decode(state['mapFile'])
         #num_cols = len(grid)
         #num_rows = len(grid[0])
         num_rows = state['map_width']
