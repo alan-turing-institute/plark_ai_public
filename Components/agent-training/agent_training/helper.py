@@ -233,7 +233,8 @@ def get_env(driving_agent,
             sparse=False,
             curriculum_learning=False,
             normalise=False,
-            is_in_vec_env=False):
+            is_in_vec_env=False,
+            ui_on=False):
 
     params = dict(driving_agent = driving_agent,
                   config_file_path = config_file_path,
@@ -242,7 +243,8 @@ def get_env(driving_agent,
                   random_pelican_start_position = random_pelican_start_position,
                   max_illegal_moves_per_turn = max_illegal_moves_per_turn,
                   normalise=normalise,
-                  is_in_vec_env=is_in_vec_env)
+                  is_in_vec_env=is_in_vec_env,
+                  ui_on=ui_on)
     
     if opponent != None and driving_agent == 'pelican':
         params.update(panther_agent_filepath = opponent)
@@ -268,7 +270,8 @@ def get_envs(driving_agent,
              curriculum_learning=False,
              vecenv=True,
              mixture=None,
-             normalise=False):
+             normalise=False,
+             ui_on=False):
 
     params = dict(driving_agent = driving_agent,
                   config_file_path = config_file_path,
@@ -279,7 +282,8 @@ def get_envs(driving_agent,
                   curriculum_learning=curriculum_learning,
                   sparse = sparse,
                   normalise = normalise,
-                  is_in_vec_env=vecenv)
+                  is_in_vec_env=vecenv,
+                  ui_on=ui_on)
 
     if len(opponents) == 1:
         params.update(opponent=opponents[0])
@@ -546,7 +550,7 @@ def make_video(model,env,video_file_path,n_steps = 10000,fps=DEFAULT_FPS,determi
         image = env.render(view='ALL')
         action, _ = model.predict(obs, deterministic=deterministic)
     
-        obs, reward, done, info = env.step(action)
+        obs, reward, done, info = env.step(int(action))
         if verbose:
             logger.info("Step: "+str(step)+" Action: "+str(action)+' Reward:'+str(reward)+' Done:'+str(done))
 
