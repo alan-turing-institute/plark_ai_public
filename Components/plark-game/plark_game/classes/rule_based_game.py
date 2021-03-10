@@ -15,10 +15,10 @@ class RuleBasedGame(Newgame):
         relative_basic_agents_filepath = os.path.normpath(relative_basic_agents_filepath)
 
 
-        self.pelicanAgent = load_agent(self.pelican_parameters['agent_filepath'], 
+        self.pelicanAgent = load_agent(self.pelican_parameters['agent_filepath'],
                                        self.pelican_parameters['agent_name'],
                                        relative_basic_agents_filepath,self)
-        self.pantherAgent = load_agent(self.panther_parameters['agent_filepath'], 
+        self.pantherAgent = load_agent(self.panther_parameters['agent_filepath'],
                                        self.panther_parameters['agent_name'],
                                        relative_basic_agents_filepath,self)
         # Game state variables
@@ -29,11 +29,12 @@ class RuleBasedGame(Newgame):
         self.render_width = self.pelican_parameters['render_width']
 
         self.reset_game()
-        self.render(self.render_width,self.render_height,"PANTHER")
+        if kwargs['ui_on']:
+            self.render(self.render_width,self.render_height,"PANTHER")
 
-def create_rule_based_game(config_file_path):
+def create_rule_based_game(config_file_path, **kwargs):
     with open(config_file_path) as json_file:
         game_config = json.load(json_file)
     game_config["render_settings"]["output_view_all"] = False
     game_config["game_settings"]["driving_agent"] = ""
-    return RuleBasedGame(game_config)
+    return RuleBasedGame(game_config, **kwargs)

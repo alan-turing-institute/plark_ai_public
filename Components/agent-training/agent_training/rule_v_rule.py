@@ -10,6 +10,7 @@ if __name__ == '__main__':
     #Env variables
     config_file_path = '/Components/plark-game/plark_game/game_config/10x10/balanced.json'
     driving_agent = 'pelican'
+    ui_on = True
 
     random_panther_start_position = True
     random_pelican_start_position = True
@@ -17,11 +18,15 @@ if __name__ == '__main__':
     env = PlarkEnvSparse(config_file_path=config_file_path,
                          driving_agent=driving_agent,
                          random_panther_start_position=random_panther_start_position,
-                         random_pelican_start_position=random_pelican_start_position)
-    
+                         random_pelican_start_position=random_pelican_start_position,
+                         ui_on=ui_on)
+
     #This is the only difference to a normal environment - one has to set the game
     #to a RuleBasedGame
-    env.env.activeGames[len(env.env.activeGames)-1] = create_rule_based_game(config_file_path)
+    kwargs = {}
+    kwargs['ui_on'] = ui_on
+    env.env.activeGames[len(env.env.activeGames)-1] = \
+        create_rule_based_game(config_file_path, **kwargs)
 
     env.reset()
 
@@ -31,7 +36,7 @@ if __name__ == '__main__':
         reward += r
         if done:
             break
-    
+
     print(info['status'])
     print("Reward:", reward)
 

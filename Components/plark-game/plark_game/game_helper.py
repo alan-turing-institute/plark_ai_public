@@ -1,3 +1,5 @@
+import sys
+
 # converts the grid based 'oddq' method of storing map into the cubed
 # coordinate system this makes it easiser to run search algorthems (apparently)
 def oddq_to_cube(col, row):
@@ -189,3 +191,47 @@ def searchRadius(grid, start_col, start_row, r, searchType):
                     returnList.append({"type": item_type, "state": item_state})
     return returnList
 
+###############################################################################
+# This version of searchRadius was created to allow operation without 
+# grid that comes via state['mapFile'] and requires expensive UI rendering
+# each step
+###############################################################################
+def searchRadius_nongrid(state, start_col, start_row, r, searchType):
+        
+    # Note: searchType is a string in various calls not a list of search types
+
+    if searchType not in ['TORPEDO']:
+        sys.exit('In searchRadius_nongrid. Only TORPEOD supported as searchType but %s given' % searchType)
+
+    # num_cols = len(grid)
+    # num_rows = len(grid[0])
+    num_rows = state['map_width']
+    num_cols = state['map_height']
+
+    # deployed torpedoes
+    deployed_torpedoes = state['deployed_torpedoes']
+
+    # Torpedo doesn't have a state
+    # An sb does; the grid-based returns True for Torpedo state
+    # so we just put that in here, but certainly need to get 
+    # the state for an sb when extending this method
+    dt_positions = [{'col':d.col, 'row':d.row, 'state':True} for d in deployed_torpedoes]
+
+    print(dt_positions)
+
+    # Same as before, just returns coordinate pairs in a list of dicts
+    searchList = getRadius(start_col, start_row, r, num_cols, num_rows)
+    
+    print('searchList: ' + str(searchList))
+
+    returnList = []
+
+    def same_cell(one, two):
+        return one['row'] == two['row'] and one['col'] == two['col']
+
+    for dt in dt_positions:
+        for cell in searchList:
+            if same_cell(dt, cell):
+                returnList.append({"type": searchType, "state": dt['state']})
+
+    return returnList
