@@ -34,7 +34,7 @@ class NNAgent(Agent):
 
         #If file directory name is given, read from file
         if file_dir_name is not None:
-            metadata, genotype = self._read_agent_from_file(file_dir_name) 
+            metadata, genotype = self._read_agent_from_file(file_dir_name)
 
             self.num_inputs = metadata['num_inputs']
             self.num_hidden_layers = metadata['num_hidden_layers']
@@ -79,7 +79,6 @@ class NNAgent(Agent):
     def _build_nn(self):
 
         layers = []
-
         if self.num_hidden_layers == 0:
             layers.append(torch.nn.Linear(self.num_inputs, self.num_outputs))
 
@@ -105,7 +104,7 @@ class NNAgent(Agent):
         x = torch.tensor(x, dtype=torch.float64)
         net_out = self.nn.forward(x)
         return net_out.tolist()
-    
+
     #Randomly sample action from network output probability distribution
     def _sample_action(self, net_out):
         action_nums = list(range(len(net_out)))
@@ -187,7 +186,7 @@ class NNAgent(Agent):
             for params in layer.parameters():
 
                 #Slice out new weights
-                p_weights = new_weights[weight_index : weight_index + params.numel()] 
+                p_weights = new_weights[weight_index : weight_index + params.numel()]
                 weight_index += params.numel()
 
                 #Resize and set new weights
@@ -226,12 +225,13 @@ class NNAgent(Agent):
         with open(file_path, 'w') as outfile:
             csv_writer = csv.writer(outfile)
             csv_writer.writerow(self.get_weights())
-                
-    def _save_agent_to_file(self, player_type, obs_normalise, domain_params_in_obs):
+
+    def _save_agent_to_file(self, player_type, obs_normalise, domain_params_in_obs,
+                            file_name_suffix=''):
 
         #Construct full directory path
         date_time = str(datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-        dir_name = player_type + '_' + date_time
+        dir_name = player_type + '_' + date_time + file_name_suffix
         dir_path = self.base_path + dir_name
 
         #Create directory for model
@@ -242,7 +242,7 @@ class NNAgent(Agent):
         self._save_metadata(dir_path, player_type, obs_normalise, domain_params_in_obs)
 
         #Save genotype
-        self._save_genotype(dir_path) 
+        self._save_genotype(dir_path)
 
     def _read_metadata(self, metadata_filepath):
         with open(metadata_filepath, 'r') as metadata_file:
@@ -266,5 +266,5 @@ class NNAgent(Agent):
 
         #Read genotype
         genotype = self._read_genotype(dir_path + 'genotype.csv')
-    
+
         return metadata, genotype

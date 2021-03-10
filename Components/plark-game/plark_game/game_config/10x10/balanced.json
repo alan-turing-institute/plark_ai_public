@@ -21,7 +21,7 @@
         },
         "pelican": {
             "move_limit": 10,
-            "madman_range": 0,
+            "madman_range": 1,
             "agent_filepath": "pelicanAgent_3_buoys.py",
             "agent_name":"Pelican_Agent_3_Buoys",
             "default_torps" : 5,

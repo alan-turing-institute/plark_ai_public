@@ -37,7 +37,7 @@ RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/so
 
 # Update the package list and install chrome
 RUN apt-get update -y
-RUN apt-get install -y google-chrome-stable 
+RUN apt-get install -y google-chrome-stable
 
 # Set up Chromedriver Environment variables
 ENV CHROMEDRIVER_DIR /chromedriver
@@ -79,7 +79,7 @@ CMD sh run_servers.sh && tail -f /dev/null
 # Each time a new conda package or pip requirement is needed, this command must be rerun to rebuild the image
 # Note that most of the installed packages from before are cached by docker to save time
 # To run the docker container:
-#       - sudo docker run --runtime=nvidia -v /home/aidanjones/repos/plark_ai/Components:/Components -v /datasets/plark_ai:/data -p 8890:8888 -p 5001:5000 -it --shm-size=8192m plark_ai /bin/bash 
+#       - sudo docker run --runtime=nvidia -v /home/aidanjones/repos/plark_ai/Components:/Components -v /datasets/plark_ai:/data -p 8890:8888 -p 5001:5000 -it --shm-size=8192m plark_ai /bin/bash
 # STEPS FOR JUPYTER
 # Inside the container, run jupyter:
 #        - jupyter notebook --ip 0.0.0.0 --port 8888 --no-browser --allow-root &
