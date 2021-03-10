@@ -110,7 +110,8 @@ class PNM():
                                            max_illegal_moves_per_turn = self.max_illegal_moves_per_turn,
                                            sparse = sparse,
                                            vecenv = self.parallel,
-                                           normalise = normalise)
+                                           normalise = normalise,
+                                           ui_on=False )
 
         # Creating panther env
         self.panther_env = helper.get_envs('panther',
@@ -121,7 +122,8 @@ class PNM():
                                            max_illegal_moves_per_turn = self.max_illegal_moves_per_turn,
                                            sparse = sparse,
                                            vecenv = self.parallel,
-                                           normalise = normalise)
+                                           normalise = normalise,
+                                           ui_on=False )
 
 
     def compute_initial_payoffs(self):
