@@ -22,54 +22,15 @@ class PelicanAgentFixedSBs(Pelican_Agent):
 
     def getAction(self, state):
 
-        #######################################################################
-        # OLD: using grid
-        #######################################################################
-        # grid = jsonpickle.decode(state["mapFile"]) # REMOVE IN DUE COURSE
-        # num_cols = len(grid)
-        # num_rows = len(grid[0])
         num_rows = state['map_width']
         num_cols = state['map_height']
 
-        #######################################################################
-        # OLD: using grid
-        #######################################################################
-        # pelican_loc = [
-            # cell for row in grid for cell in row if "PELICAN" in cell["objects"]
-        # ][0]["coordinate"]
-        # pelican_col = pelican_loc[0]
-        # pelican_row = pelican_loc[1]
-        #######################################################################
-        # NEW: not using grid
-        #######################################################################
         pelican_row = state['pelican_row']
         pelican_col = state['pelican_col']
-
-
-        #######################################################################
-        # OLD: using grid
-        #######################################################################
-
-        # deployed_sb_cells = [
-            # cell for row in grid for cell in row if "SONOBUOY" in cell["objects"]
-        # ]
-        # deployed_sbs = [
-            # {
-                # "state": cell["objects"]["SONOBUOY"],
-                # "col": cell["coordinate"][0],
-                # "row": cell["coordinate"][1],
-            # }
-            # for cell in deployed_sb_cells
-        # ]
-
-        #######################################################################
-        # NEW: not using grid
-        #######################################################################
 
         deployed_sbs = [{'state':buoy.state,
                          'col':buoy.col,
                          'row':buoy.row} for buoy in state['deployed_sonobuoys']]
-
 
         for sb in deployed_sbs:
             # active sb means panther nearby
@@ -92,30 +53,13 @@ class PelicanAgentFixedSBs(Pelican_Agent):
                     )
                 # If pelican is within sb range, drop torpedo if there isn't one nearby already
                 else:
-                    #######################################################################
-                    # OLD: using grid
-                    #######################################################################
-
-                    # return_list = game_helper.searchRadius(grid, pelican_col, pelican_row, 1, "TORPEDO")
 
                     return_list = game_helper.searchRadius_nongrid(state, pelican_col, pelican_row, 1, "TORPEDO")
 
-                    # print(state)
-
-                    # if len(return_list) > 0:
-                        # print("===========================================================")
-                        # print('searchRadius(grid, pelican_col, pelican_row, 1, "TORPEDO")')
-                        # print(return_list)
-                        # print(return_list_new)
-
-                        # # This is probably too strict to expect equality of the lists
-                        # assert(return_list == return_list_new)
-                        # print("===========================================================")
-
-                    if (game_helper.searchRadius_nongrid(state, 
-                                                         pelican_col, 
-                                                         pelican_row, 
-                                                         1, 
+                    if (game_helper.searchRadius_nongrid(state,
+                                                         pelican_col,
+                                                         pelican_row,
+                                                         1,
                                                          "TORPEDO") == []):
                         return self.action_lookup(7)  # torp
                     else:
@@ -127,15 +71,12 @@ class PelicanAgentFixedSBs(Pelican_Agent):
                 filter(lambda item: (item.type == "SONOBUOY"), state["pelican_loadout"])
             ):
                 # If there isn't already a sonobuoy at this target location
-                # alread_there_old = False if "SONOBUOY" not in grid[sb["col"]][sb["row"]]["objects"] else True
-                print(deployed_sbs)
-                already_there = False
+                sb_already_there = False
                 for ds in deployed_sbs:
                     if sb['col']==ds['col'] and sb['row']==ds['row']:
-                        already_there = True
+                        sb_already_there = True
                         break
-                # assert(alread_there_old == already_there)
-                if not already_there:
+                if not sb_already_there:
                     # If not already in target location, move towards it
                     if (pelican_col != sb["col"]) or (pelican_row != sb["row"]):
                         path = game_helper.get_path(

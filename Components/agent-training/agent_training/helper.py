@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 from plark_game import classes
 from gym_plark.envs import plark_env
 from gym_plark.envs.plark_env_sparse import PlarkEnvSparse
-from gym_plark.envs.plark_env import PlarkEnv
 from gym_plark.envs.plark_env_cl import PlarkEnvCurriculum
+from gym_plark.envs.plark_env import PlarkEnv
 from stable_baselines.common.vec_env import SubprocVecEnv
 from stable_baselines.common.env_checker import check_env
 from stable_baselines import DQN, PPO2, A2C, ACKTR
@@ -22,6 +22,7 @@ from copy import deepcopy
 # PyTorch Stable Baselines
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv as SubprocVecEnv_Torch
+from stable_baselines3.common.vec_env import DummyVecEnv as DummyVecEnv_Torch
 
 from plark_game import classes
 from plark_game.classes.environment import Environment
@@ -66,7 +67,7 @@ def train_until(model, env, victory_threshold=0.8, victory_trials=10, max_second
         steps = steps + testing_interval
 
         logger.info("Learning took {:.2f} seconds".format((after_learning - before_learning).total_seconds()))
-        
+
         logger.info("Checking victory")
         victory_count, avg_reward = check_victory(model, env, trials=victory_trials)
         after_check = datetime.datetime.now()
@@ -79,10 +80,10 @@ def train_until(model, env, victory_threshold=0.8, victory_trials=10, max_second
             tb_writer.add_scalar('{}_avg_reward'.format(tb_log_name), avg_reward, steps)
             tb_writer.add_scalar('{}_victory_count'.format(tb_log_name), victory_count, steps)
             tb_writer.add_scalar('{}_victory_fraction'.format(tb_log_name), victory_fraction, steps)
-        
+
         current_time = datetime.datetime.now()
         elapsed_seconds = (current_time - initial_time).total_seconds()
-        
+
         if victory_fraction >= victory_threshold:
             logger.info("Achieved victory threshold after {} steps".format(steps))
             break
@@ -92,47 +93,50 @@ def train_until(model, env, victory_threshold=0.8, victory_trials=10, max_second
 
 def check_victory(model, env, trials):
 
-    if isinstance(env, SubprocVecEnv_Torch):
+    if isinstance(env, SubprocVecEnv_Torch) or isinstance(env, DummyVecEnv_Torch):
         list_of_reward, n_steps, victories = evaluate_policy_torch(model, env, n_eval_episodes=trials, deterministic=False, render=False, callback=None, reward_threshold=None, return_episode_rewards=True)
-    else: 
+    else:
         list_of_reward, n_steps, victories = evaluate_policy(model, env, n_eval_episodes=trials, deterministic=False, render=False, callback=None, reward_threshold=None, return_episode_rewards=True)
 
-    logger.info("===================================================")
-    modelplayer = env.get_attr('driving_agent')[0]
-    logger.info('In check_victory, driving_agent: %s' % modelplayer)
+    # Not elegant but should work
+    try:
+        modelplayer = env.get_attr('driving_agent')[0]
+    except:
+        modelplayer = env.driving_agent
 
     avg_reward = float(sum(list_of_reward))/len(list_of_reward)
     victory_count = len([v for v in victories if v == True])
-    victory_prop = float(victory_count)/len(victories) 
-    logger.info('victory_prop: %.2f (%s out of %s); avg_reward: %.3f' % 
-                                                      (victory_prop,
-                                                       victory_count, 
+    victory_prop = float(victory_count)/len(victories)
+    logger.info('check_victory for %s. victory_prop: %.2f (%s/%s); avg_reward: %.3f' %
+                                                      (modelplayer,
+                                                       victory_prop,
+                                                       victory_count,
                                                        len(victories),
                                                        avg_reward
                                                        ))
-    logger.info("===================================================")
+    # logger.info("===================================================")
 
-    return victory_prop, avg_reward, 
+    return victory_prop, avg_reward,
 
-def evaluate_policy_torch(model, env, n_eval_episodes, deterministic=True, 
-                                                       render=False, 
-                                                       callback=None, 
-                                                       reward_threshold=None, 
+def evaluate_policy_torch(model, env, n_eval_episodes, deterministic=True,
+                                                       render=False,
+                                                       callback=None,
+                                                       reward_threshold=None,
                                                        return_episode_rewards=False):
     """
     Modified from https://stable-baselines.readthedocs.io/en/master/_modules/stable_baselines/common/evaluation.html#evaluate_policy
     to return additional info
     """
-    logger.debug("Evaluating policy")
+    # logger.debug("Evaluating policy for %d episodes" % n_eval_episodes)
     episode_rewards, episode_lengths, victories = [], [], []
     obs = env.reset()
     episodes_reward = [0.0 for _ in range(env.num_envs)]
     episodes_len = [0.0 for _ in range(env.num_envs)]
     state = None
 
-    logger.debug("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-    logger.debug("In evaluate_policy_torch, n_eval_episodes: %s" % n_eval_episodes)
-    logger.debug("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+    # logger.debug("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+    # logger.debug("In evaluate_policy_torch, n_eval_episodes: %s" % n_eval_episodes)
+    # logger.debug("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 
     while len(episode_rewards) < n_eval_episodes:
         action, state = model.predict(obs, state=state, deterministic=deterministic)
@@ -200,7 +204,7 @@ def evaluate_policy(model, env, n_eval_episodes=4, deterministic=True, render=Fa
 
             if episode_length > 1000:
                 logger.warning("Episode over 1000 steps.")
-                
+
             if render:
                 env.render()
             if any(dones):
@@ -223,18 +227,17 @@ def evaluate_policy(model, env, n_eval_episodes=4, deterministic=True, render=Fa
         return episode_rewards, episode_lengths, victories
     return mean_reward, std_reward, victories
 
-def get_env(driving_agent, 
-            config_file_path, 
-            opponent=None, 
-            image_based=False, 
+def get_env(driving_agent,
+            config_file_path,
+            opponent=None,
+            image_based=False,
             random_panther_start_position=True,
             random_pelican_start_position=True,
             max_illegal_moves_per_turn = 3,
             sparse=False,
             curriculum_learning=False,
             normalise=False,
-            is_in_vec_env=False,
-            ui_on=False):
+            is_in_vec_env=False):
 
     params = dict(driving_agent = driving_agent,
                   config_file_path = config_file_path,
@@ -243,14 +246,12 @@ def get_env(driving_agent,
                   random_pelican_start_position = random_pelican_start_position,
                   max_illegal_moves_per_turn = max_illegal_moves_per_turn,
                   normalise=normalise,
-                  is_in_vec_env=is_in_vec_env,
-                  ui_on=ui_on)
-    
+                  is_in_vec_env=is_in_vec_env)
+
     if opponent != None and driving_agent == 'pelican':
         params.update(panther_agent_filepath = opponent)
     elif opponent != None and driving_agent == 'panther':
         params.update(pelican_agent_filepath = opponent)
-
     if curriculum_learning:
         return PlarkEnvCurriculum(**params)
     elif sparse:
@@ -258,11 +259,11 @@ def get_env(driving_agent,
     else:
         return PlarkEnv(**params)
 
-def get_envs(driving_agent, 
-             config_file_path, 
-             opponents=[], 
+def get_envs(driving_agent,
+             config_file_path,
+             opponents=[],
              num_envs=1,
-             image_based=False, 
+             image_based=False,
              random_panther_start_position=True,
              random_pelican_start_position=True,
              max_illegal_moves_per_turn=3,
@@ -270,8 +271,7 @@ def get_envs(driving_agent,
              curriculum_learning=False,
              vecenv=True,
              mixture=None,
-             normalise=False,
-             ui_on=False):
+             normalise=False):
 
     params = dict(driving_agent = driving_agent,
                   config_file_path = config_file_path,
@@ -279,11 +279,10 @@ def get_envs(driving_agent,
                   random_panther_start_position = random_panther_start_position,
                   random_pelican_start_position = random_pelican_start_position,
                   max_illegal_moves_per_turn = max_illegal_moves_per_turn,
-                  curriculum_learning=curriculum_learning,
                   sparse = sparse,
+                  curriculum_learning=curriculum_learning,
                   normalise = normalise,
-                  is_in_vec_env=vecenv,
-                  ui_on=ui_on)
+                  is_in_vec_env=vecenv)
 
     if len(opponents) == 1:
         params.update(opponent=opponents[0])
@@ -309,7 +308,7 @@ def save_model_with_env_settings(basepath,model,modeltype,env,basicdate=None):
         render_width = env.get_attr('render_width')[0]
         image_based = env.get_attr('image_based')[0]
     else:
-        modelplayer = env.driving_agent 
+        modelplayer = env.driving_agent
         render_height = env.render_height
         render_width = env.render_width
         image_based = env.image_based
@@ -326,8 +325,10 @@ def save_model(basepath,model,modeltype,modelplayer,render_height,render_width,i
     os.makedirs(model_dir, exist_ok=True)
     os.chmod(model_dir, 0o777)
     logger.info("Saving Metadata")
-    print(model.env)
-    if isinstance(model.env, VecEnv) or isinstance(model.env, SubprocVecEnv_Torch):
+    # print(model.env)
+    if isinstance(model.env, VecEnv) or \
+            isinstance(model.env, SubprocVecEnv_Torch) or\
+            isinstance(model.env, DummyVecEnv_Torch):
         normalise = model.env.get_attr('normalise')[0]
         domain_params_in_obs = model.env.get_attr('domain_params_in_obs')[0]
     else:
@@ -338,9 +339,9 @@ def save_model(basepath,model,modeltype,modelplayer,render_height,render_width,i
     logger.info("Saving Model")
     model_path = os.path.join(model_dir, modellabel + ".zip")
     model.save(model_path)
-    logger.info('model_dir: '+model_dir)  
-    logger.info('model_path: '+model_path) 
-    
+    # logger.info('model_dir: '+model_dir)
+    logger.info('model_path: '+model_path)
+
     return model_path,model_dir, modellabel
 
 ## Used for generating the json header file which holds details regarding the model.
@@ -357,13 +358,13 @@ def save_model_metadata(model_dir,modeltype,modelplayer,dateandtime,render_heigh
     jsondata['domain_params_in_obs'] = domain_params_in_obs
     json_path = os.path.join(model_dir, 'metadata.json')
     with open(json_path, 'w') as outfile:
-        json.dump(jsondata, outfile)    
+        json.dump(jsondata, outfile)
 
     logger.info('json saved to: '+json_path)
 
 
-## Custom Model Evaluation Method for evaluating Plark games. 
-## Does require changes to how data is passed back from environments. 
+## Custom Model Evaluation Method for evaluating Plark games.
+## Does require changes to how data is passed back from environments.
 ## Instead of using return ob, reward, done, {} use eturn ob, reward, done, {game.state}
 def custom_eval(model, env, n_eval_episodes=10, deterministic=True,
                     render=False, callback=None, reward_threshold=None,
@@ -387,12 +388,12 @@ def custom_eval(model, env, n_eval_episodes=10, deterministic=True,
     :return: (float, float) Mean reward per episode, std of reward per episode
         returns ([float], [int]) when `return_episode_rewards` is True
     """
-    
+
     if player_type == "PELICAN":
         WINCONDITION = "PELICANWIN"
     if player_type == "PANTHER":
         WINCONDITION = "PANTHERWIN"
-        
+
     if isinstance(env, VecEnv):
         assert env.num_envs == 1, "You must pass only one environment when using this function"
     totalwin = 0
@@ -415,7 +416,7 @@ def custom_eval(model, env, n_eval_episodes=10, deterministic=True,
                 totalwin = totalwin + 1
         episode_rewards.append(episode_reward)
         episode_lengths.append(episode_length)
-        
+
     mean_reward = np.mean(episode_rewards)
     std_reward = np.std(episode_rewards)
 
@@ -430,9 +431,9 @@ def loadAgent(filepath, algorithm_type):
     try:
         if algorithm_type.lower() == 'dqn':
             model = DQN.load(filepath)
-        elif algorithm_type.lower() == 'ppo2': 
+        elif algorithm_type.lower() == 'ppo2':
             model = PPO2.load(filepath)
-        elif algorithm_type.lower() == 'ppo': 
+        elif algorithm_type.lower() == 'ppo':
             model = PPO.load(filepath)
         elif algorithm_type.lower() == 'a2c':
             model = A2C.load(filepath)
@@ -444,12 +445,12 @@ def loadAgent(filepath, algorithm_type):
 
 def og_load_driving_agent_make_video(pelican_agent_filepath, pelican_agent_name, panther_agent_filepath, panther_agent_name, config_file_path='/Components/plark-game/plark_game/game_config/10x10/balanced.json',video_path='/Components/plark_ai_flask/builtangularSite/dist/assets/videos'):
     """
-    Method for loading and agent, making and environment, and making a video. Mainly used in notebooks. 
+    Method for loading and agent, making and environment, and making a video. Mainly used in notebooks.
     """
     logger.info("Load driving agent make viedo - pelican agent filepast = " + pelican_agent_filepath)
     basicdate = str(datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-    video_file = basicdate+'.mp4' 
-    video_file_path = os.path.join(video_path, video_file) 
+    video_file = basicdate+'.mp4'
+    video_file_path = os.path.join(video_path, video_file)
     os.makedirs(video_path, exist_ok=True)
     files = os.listdir(pelican_agent_filepath)
     if len(files) > 0:
@@ -458,12 +459,12 @@ def og_load_driving_agent_make_video(pelican_agent_filepath, pelican_agent_name,
                 # load model
                 metadata_filepath = os.path.join(pelican_agent_filepath, 'metadata.json')
                 agent_filepath = os.path.join(pelican_agent_filepath, f)
-                
+
 
                 with open(metadata_filepath) as f:
                     metadata = json.load(f)
-                logger.info('Playing against:'+agent_filepath)  
-                if metadata['agentplayer'] == 'pelican':        
+                logger.info('Playing against:'+agent_filepath)
+                if metadata['agentplayer'] == 'pelican':
                     pelican_agent = Pelican_Agent_Load_Agent(agent_filepath, metadata['algorithm'])
                     pelican_model = pelican_agent.model
 
@@ -472,8 +473,8 @@ def og_load_driving_agent_make_video(pelican_agent_filepath, pelican_agent_name,
                     logger.info("This is the environment variable " + str(env))
 
                 elif metadata['agentplayer'] == 'panther':
-                    raise ValueError('No Pelican agent found in ', pelican_agent_filepath) 
-            
+                    raise ValueError('No Pelican agent found in ', pelican_agent_filepath)
+
     else:
         raise ValueError('no agent found in ', files)
 
@@ -484,8 +485,8 @@ def load_driving_agent_make_video(pelican_agent_filepath, pelican_agent_name, pa
     Method for loading and agent, making and environment, and making a video. Mainly used from flask server.
     """
     basicdate = str(datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-    video_file = basicdate+'.mp4' 
-    video_file_path = os.path.join(video_path, video_file) 
+    video_file = basicdate+'.mp4'
+    video_file_path = os.path.join(video_path, video_file)
     os.makedirs(video_path, exist_ok=True)
 
     kwargs = {
@@ -497,26 +498,30 @@ def load_driving_agent_make_video(pelican_agent_filepath, pelican_agent_name, pa
     game_env = Environment()
     game_env.createNewGame(config_file_path, **kwargs)
     game = game_env.activeGames[len(game_env.activeGames)-1]
-    
+
     agent = classes.load_agent(pelican_agent_filepath,pelican_agent_name,basic_agents_filepath,game,**kwargs)
 
     if renderHeight is None:
         renderHeight = game.pelican_parameters['render_height']
     if renderHeight is None:
         renderWidth = game.pelican_parameters['render_width']
-    
+
     basewidth, hsize = new_make_video(agent, game, video_file_path, renderWidth, renderHeight)
 
     return video_file, game.gameState ,video_file_path
 
-def make_video_VEC_ENV(model, env, video_file_path,n_steps = 100,fps=DEFAULT_FPS,deterministic=False,basewidth=BASEWIDTH,verbose=False):
+def make_video_VEC_ENV(model, env, video_file_path, n_steps = 100,
+                                                        fps=DEFAULT_FPS,
+                                                        deterministic=False,
+                                                        basewidth=BASEWIDTH,
+                                                        verbose=False):
     # Test the trained agent
     # This is when you have a stable baselines model and an gym env
     obs = env.reset()
-    writer = imageio.get_writer(video_file_path, fps=fps) 
-    hsize = None
-    for step in range(n_steps):
+    writer = imageio.get_writer(video_file_path, fps=fps)
+    # hsize = None
 
+    def render():
         #######################################################################
         # Get image and comvert back to PIL.Image
         try:
@@ -524,70 +529,86 @@ def make_video_VEC_ENV(model, env, video_file_path,n_steps = 100,fps=DEFAULT_FPS
         except:
             print("NOT WORKED TO CONVERT BACK TO PIL")
         #######################################################################
+        # if hsize is None:
+        wpercent = (basewidth/float(image.size[0]))
+        hsize = int((float(image.size[1])*float(wpercent)))
+        res_image = image.resize((basewidth,hsize), PIL.Image.ANTIALIAS)
+        writer.append_data(np.copy(np.array(res_image)))
 
+    # only setting hsize since other similar functions return so we do here too
+    hsize = render()
+    for step in range(n_steps):
         action, _ = model.predict(obs, deterministic=deterministic)
-    
         obs, reward, done, info = env.step(action)
         if verbose:
             logger.info("Step: "+str(step)+" Action: "+str(action)+' Reward:'+str(reward)+' Done:'+str(done))
+        hsize = render()
 
-        if hsize is None:
-            wpercent = (basewidth/float(image.size[0]))
-            hsize = int((float(image.size[1])*float(wpercent)))
-        res_image = image.resize((basewidth,hsize), PIL.Image.ANTIALIAS)
-        writer.append_data(np.copy(np.array(res_image)))
-    writer.close()  
-    return basewidth,hsize      
+    writer.close()
+    return basewidth,hsize
 
-
-def make_video(model,env,video_file_path,n_steps = 10000,fps=DEFAULT_FPS,deterministic=False,basewidth=BASEWIDTH,verbose =False):
+def make_video(model, env, video_file_path, n_steps = 10000,
+                                                fps=DEFAULT_FPS,
+                                                deterministic=False,
+                                                basewidth=BASEWIDTH,
+                                                verbose=False,
+                                                break_flag=True):
     # Test the trained agent
     # This is when you have a stable baselines model and an gym env
     obs = env.reset()
-    writer = imageio.get_writer(video_file_path, fps=fps) 
+    writer = imageio.get_writer(video_file_path, fps=fps)
     hsize = None
-    for step in range(n_steps):
+
+    def render():
         image = env.render(view='ALL')
+        wpercent = (basewidth/float(image.size[0]))
+        hsize = int((float(image.size[1])*float(wpercent)))
+        res_image = image.resize((basewidth,hsize), PIL.Image.ANTIALIAS)
+        writer.append_data(np.copy(np.array(res_image)))
+        return hsize
+
+    hsize = render()
+    for step in range(n_steps):
         action, _ = model.predict(obs, deterministic=deterministic)
-    
         obs, reward, done, info = env.step(int(action))
+
         if verbose:
             logger.info("Step: "+str(step)+" Action: "+str(action)+' Reward:'+str(reward)+' Done:'+str(done))
 
-        if hsize is None:
-            wpercent = (basewidth/float(image.size[0]))
-            hsize = int((float(image.size[1])*float(wpercent)))
-        res_image = image.resize((basewidth,hsize), PIL.Image.ANTIALIAS)
-        writer.append_data(np.copy(np.array(res_image)))
-        if done:
+        hsize = render()
+        if break_flag and done:
             if verbose:
                 logger.info("Goal reached:, reward="+ str(reward))
             break
-    writer.close()  
-    return basewidth,hsize      
+        elif done:
+            obs = env.reset()
+            hsize = render()
+
+    writer.close()
+    return basewidth,hsize
 
 def new_make_video(agent,game,video_file_path,renderWidth, renderHeight, n_steps = 10000,fps=DEFAULT_FPS,deterministic=False,basewidth=BASEWIDTH,verbose =False):
     # Test the trained agent
-    # This is when you have a plark game agent and a plark game 
+    # This is when you have a plark game agent and a plark game
     game.reset_game()
-    writer = imageio.get_writer(video_file_path, fps=fps) 
+    writer = imageio.get_writer(video_file_path, fps=fps)
     hsize = None
     for step in range(n_steps):
         image = game.render(renderWidth, renderHeight, view='ALL')
         game_state_dict = game._state("PELICAN")
         action = agent.getAction(game_state_dict)
         game.game_step(action)
-       
+
         if hsize is None:
             wpercent = (basewidth/float(image.size[0]))
             hsize = int((float(image.size[1])*float(wpercent)))
         res_image = image.resize((basewidth,hsize), PIL.Image.ANTIALIAS)
         writer.append_data(np.copy(np.array(res_image)))
 
-        if game_state_dict['game_state'] == "PELICANWIN" or game_state_dict['game_state'] == "WINCHESTER" or game_state_dict['game_state'] == "ESCAPE": 
+        if game_state_dict['game_state'] == "PELICANWIN" or game_state_dict['game_state'] == "WINCHESTER" or game_state_dict['game_state'] == "ESCAPE":
             break
-    writer.close()  
-    return basewidth,hsize  
+    writer.close()
+    return basewidth,hsize
 
 def make_video_plark_env(agent, env, video_file_path, n_steps=10000, fps=DEFAULT_FPS, deterministic=False, basewidth=BASEWIDTH, verbose=False):
 
@@ -596,39 +617,30 @@ def make_video_plark_env(agent, env, video_file_path, n_steps=10000, fps=DEFAULT
     # Test the trained agent
     # This is when you have a plark game agent and a plark env
     env.reset()
-    writer = imageio.get_writer(video_file_path, fps=fps) 
-    hsize = None
+    writer = imageio.get_writer(video_file_path, fps=fps)
 
-    #Render first image
-    image = env.render(view='ALL')
-    if hsize is None:
+    def render():
+        #Render first image
+        image = env.render(view='ALL')
         wpercent = (basewidth/float(image.size[0]))
         hsize = int((float(image.size[1])*float(wpercent)))
-    res_image = image.resize((basewidth,hsize), PIL.Image.ANTIALIAS)
-    writer.append_data(np.copy(np.array(res_image)))
-
-    obs = env._observation()
-    for step in range(n_steps):
-        if agent is not None:
-            action = agent.getAction(obs)
-        else:
-            action = None
-        obs, _, done, info = env.step(action)
-        image = env.render(view='ALL')
-       
-        if hsize is None:
-            wpercent = (basewidth/float(image.size[0]))
-            hsize = int((float(image.size[1])*float(wpercent)))
         res_image = image.resize((basewidth,hsize), PIL.Image.ANTIALIAS)
         writer.append_data(np.copy(np.array(res_image)))
+        return hsize
 
+    hsize = render()
+    obs = env._observation()
+    for step in range(n_steps):
+        action = agent.getAction(obs) if agent is not None else None
+        obs, _, done, info = env.step(action)
+        hsize = render()
         if done:
             print(info['status'])
             break
 
-    writer.close()  
+    writer.close()
 
-    return basewidth,hsize  
+    return basewidth, hsize
 
 def get_fig(df):
     fig, (ax1,ax2) = plt.subplots(nrows = 2, ncols = 1, sharex = True)
