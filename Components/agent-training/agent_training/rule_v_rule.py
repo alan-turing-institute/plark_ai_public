@@ -8,8 +8,7 @@ from plark_game.classes.rule_based_game import create_rule_based_game
 if __name__ == '__main__':
 
     #Env variables
-    # config_file_path = '/Components/plark-game/plark_game/game_config/10x10/balanced_DEBUG.json'
-    config_file_path = '/Components/plark-game/plark_game/game_config/10x10/balanced_pelicanAgent_any_size_grid.json'
+    config_file_path = '/Components/plark-game/plark_game/game_config/10x10/balanced_DEBUG.json'
     driving_agent = 'pelican'
     ui_on = False
 
@@ -46,6 +45,10 @@ if __name__ == '__main__':
                          random_panther_start_position=random_panther_start_position,
                          random_pelican_start_position=random_pelican_start_position,
                          ui_on=True)
+    kwargs = {}
+    kwargs['ui_on'] = True
+    env.env.activeGames[len(env.env.activeGames)-1] = \
+        create_rule_based_game(config_file_path, **kwargs)
 
     video_path = '/rule_v_rule.mp4'
     helper.make_video_plark_env(None, env, video_path, n_steps=200)
