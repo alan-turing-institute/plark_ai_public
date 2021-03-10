@@ -8,7 +8,8 @@ from plark_game.classes.rule_based_game import create_rule_based_game
 if __name__ == '__main__':
 
     #Env variables
-    config_file_path = '/Components/plark-game/plark_game/game_config/10x10/balanced_DEBUG.json'
+    # config_file_path = '/Components/plark-game/plark_game/game_config/10x10/balanced_DEBUG.json'
+    config_file_path = '/Components/plark-game/plark_game/game_config/10x10/balanced_pelicanAgent_any_size_grid.json'
     driving_agent = 'pelican'
     ui_on = False
 
