@@ -237,6 +237,7 @@ def get_env(driving_agent,
             sparse=False,
             curriculum_learning=False,
             normalise=False,
+            ui_on=False,
             is_in_vec_env=False):
 
     params = dict(driving_agent = driving_agent,
@@ -246,6 +247,7 @@ def get_env(driving_agent,
                   random_pelican_start_position = random_pelican_start_position,
                   max_illegal_moves_per_turn = max_illegal_moves_per_turn,
                   normalise=normalise,
+                  ui_on=ui_on,
                   is_in_vec_env=is_in_vec_env)
 
     if opponent != None and driving_agent == 'pelican':
@@ -271,6 +273,7 @@ def get_envs(driving_agent,
              curriculum_learning=False,
              vecenv=True,
              mixture=None,
+             ui_on=False,
              normalise=False):
 
     params = dict(driving_agent = driving_agent,
@@ -282,6 +285,7 @@ def get_envs(driving_agent,
                   sparse = sparse,
                   curriculum_learning=curriculum_learning,
                   normalise = normalise,
+                  ui_on=ui_on,
                   is_in_vec_env=vecenv)
 
     if len(opponents) == 1:
