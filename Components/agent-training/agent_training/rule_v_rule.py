@@ -10,7 +10,7 @@ if __name__ == '__main__':
     #Env variables
     config_file_path = '/Components/plark-game/plark_game/game_config/10x10/balanced.json'
     driving_agent = 'pelican'
-    ui_on = True
+    ui_on = False
 
     random_panther_start_position = True
     random_pelican_start_position = True
@@ -39,6 +39,12 @@ if __name__ == '__main__':
 
     print(info['status'])
     print("Reward:", reward)
+
+    env = PlarkEnvSparse(config_file_path=config_file_path,
+                         driving_agent=driving_agent,
+                         random_panther_start_position=random_panther_start_position,
+                         random_pelican_start_position=random_pelican_start_position,
+                         ui_on=True)
 
     video_path = '/rule_v_rule.mp4'
     helper.make_video_plark_env(None, env, video_path, n_steps=200)

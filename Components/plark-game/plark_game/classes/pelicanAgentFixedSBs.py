@@ -25,7 +25,7 @@ class PelicanAgentFixedSBs(Pelican_Agent):
         #######################################################################
         # OLD: using grid
         #######################################################################
-        grid = jsonpickle.decode(state["mapFile"]) # REMOVE IN DUE COURSE
+        # grid = jsonpickle.decode(state["mapFile"]) # REMOVE IN DUE COURSE
         # num_cols = len(grid)
         # num_rows = len(grid[0])
         num_rows = state['map_width']
@@ -96,28 +96,27 @@ class PelicanAgentFixedSBs(Pelican_Agent):
                     # OLD: using grid
                     #######################################################################
 
-                    return_list = game_helper.searchRadius(grid, pelican_col, pelican_row, 1, "TORPEDO")
+                    # return_list = game_helper.searchRadius(grid, pelican_col, pelican_row, 1, "TORPEDO")
 
-                    return_list_new = game_helper.searchRadius_nongrid(state, pelican_col, pelican_row, 1, "TORPEDO")
+                    return_list = game_helper.searchRadius_nongrid(state, pelican_col, pelican_row, 1, "TORPEDO")
 
                     # print(state)
 
-                    if len(return_list) > 0:
-                        print("===========================================================")
-                        print('searchRadius(grid, pelican_col, pelican_row, 1, "TORPEDO")')
-                        print(return_list)
-                        print(return_list_new)
+                    # if len(return_list) > 0:
+                        # print("===========================================================")
+                        # print('searchRadius(grid, pelican_col, pelican_row, 1, "TORPEDO")')
+                        # print(return_list)
+                        # print(return_list_new)
 
-                        # This is probably too strict to expect equality of the lists
-                        assert(return_list == return_list_new)
-                        print("===========================================================")
+                        # # This is probably too strict to expect equality of the lists
+                        # assert(return_list == return_list_new)
+                        # print("===========================================================")
 
-                    if (
-                        game_helper.searchRadius(
-                            grid, pelican_col, pelican_row, 1, "TORPEDO"
-                        )
-                        == []
-                    ):
+                    if (game_helper.searchRadius_nongrid(state, 
+                                                         pelican_col, 
+                                                         pelican_row, 
+                                                         1, 
+                                                         "TORPEDO") == []):
                         return self.action_lookup(7)  # torp
                     else:
                         return self.action_lookup(8)  # end
@@ -128,14 +127,14 @@ class PelicanAgentFixedSBs(Pelican_Agent):
                 filter(lambda item: (item.type == "SONOBUOY"), state["pelican_loadout"])
             ):
                 # If there isn't already a sonobuoy at this target location
-                alread_there_old = False if "SONOBUOY" not in grid[sb["col"]][sb["row"]]["objects"] else True
+                # alread_there_old = False if "SONOBUOY" not in grid[sb["col"]][sb["row"]]["objects"] else True
                 print(deployed_sbs)
                 already_there = False
                 for ds in deployed_sbs:
                     if sb['col']==ds['col'] and sb['row']==ds['row']:
                         already_there = True
                         break
-                assert(alread_there_old == already_there)
+                # assert(alread_there_old == already_there)
                 if not already_there:
                     # If not already in target location, move towards it
                     if (pelican_col != sb["col"]) or (pelican_row != sb["row"]):
