@@ -57,7 +57,7 @@ def main():
 
     if agent_type not in ["PELICAN", "PANTHER"]:
         raise Exception("Agent type must PELICAN or PANTHER: %s" % (agent_type))
-    
+
     if not os.path.exists(AGENTS_PATH):
         raise Exception("Given agent path doesn't exist: %s" % (AGENTS_PATH))
 
@@ -68,12 +68,21 @@ def main():
         agent_path = os.path.join(AGENTS_PATH, "panther")
         test_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "panther")
 
+    # put the same logic here as we have in combatant.py
+    subdirs = os.listdir(agent_path)
+    for subdir in subdirs:
+        if os.path.isdir(os.path.join(agent_path, subdir)):
+            agent_path = os.path.join(agent_path, subdir)
+            break
+
+
+
     state = deserialize_state(json.load(open(os.path.join(test_path, "10x10_state.json"))))
 
-    obs = np.loadtxt(os.path.join(test_path, "10x10_obs.txt"))
-    obs_norm = np.loadtxt(os.path.join(test_path, "10x10_obs_norm.txt"))
-    d_params = np.loadtxt(os.path.join(test_path, "10x10_domain_params.txt"))
-    d_params_norm = np.loadtxt(os.path.join(test_path, "10x10_domain_params_norm.txt"))
+    obs = list(np.loadtxt(os.path.join(test_path, "10x10_obs.txt")))
+    obs_norm = list(np.loadtxt(os.path.join(test_path, "10x10_obs_norm.txt")))
+    d_params = list(np.loadtxt(os.path.join(test_path, "10x10_domain_params.txt")))
+    d_params_norm = list(np.loadtxt(os.path.join(test_path, "10x10_domain_params_norm.txt")))
 
     agent = load_combatant(agent_path, AGENT_NAME, BASIC_AGENTS_PATH)
 
@@ -86,5 +95,5 @@ def main():
 
 
 if __name__ == "__main__":
-    
+
     main()
